@@ -6,6 +6,7 @@ import LoginPage from '@/pages/auth/LoginPage';
 import AppLayout from '@/components/layout/AppLayout';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
 import TransactionsPage from '@/pages/transactions/TransactionsPage';
+import BudgetsPage from '@/pages/budgets/BudgetsPage';
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
@@ -37,7 +38,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/budgets" element={<div>Budgets</div>} />
+            <Route path="/budgets" element={<BudgetsPage />} />
             <Route path="/insights" element={<div>Insights</div>} />
             <Route path="/settings" element={<div>Settings</div>} />
           </Route>
