@@ -14,3 +14,19 @@ export async function scanReceipt(imageBase64: string) {
     confidence: number;
   };
 }
+
+export async function fetchExchangeRate() {
+  const { data, error } = await supabase.functions.invoke('fetch-exchange-rate');
+  if (error) throw error;
+  return data as {
+    id: string;
+    from_currency: string;
+    to_currency: string;
+    rate_type: string;
+    buy_rate: number;
+    sell_rate: number;
+    source: string;
+    fetched_at: string;
+    manual_override: boolean;
+  };
+}
