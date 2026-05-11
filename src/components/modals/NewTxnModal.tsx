@@ -20,16 +20,24 @@ export default function NewTxnModal() {
   const isDesktop = useIsDesktop();
   const closeModal = useModalStore((s) => s.closeModal);
   const showToast = useModalStore((s) => s.showToast);
+  const payload = useModalStore((s) => s.payload);
   const addTransaction = useTransactionStore((s) => s.addTransaction);
   const activeGroup = useGroupStore((s) => s.activeGroup);
   const currentUser = useAuthStore((s) => s.user);
 
+  const prefill = payload?.prefill as {
+    amount?: number;
+    currency?: 'ARS' | 'USD';
+    description?: string;
+    date?: string;
+  } | undefined;
+
   const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState(prefill?.amount ? String(prefill.amount / 100) : '');
+  const [description, setDescription] = useState(prefill?.description ?? '');
   const [categoryId, setCategoryId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS');
+  const [date, setDate] = useState(prefill?.date ?? new Date().toISOString().slice(0, 10));
+  const [currency, setCurrency] = useState<'ARS' | 'USD'>(prefill?.currency ?? 'ARS');
   const [isShared, setIsShared] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 

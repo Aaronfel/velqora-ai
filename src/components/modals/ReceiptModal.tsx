@@ -4,14 +4,18 @@ import { useIsDesktop } from '@/hooks/useMediaQuery';
 import Sheet from '@/components/ui/Sheet';
 import Button from '@/components/ui/Button';
 import { useModalStore } from '@/stores/modalStore';
+import { scanReceipt } from '@/lib/api';
 import { Camera, Upload, ScanLine } from 'lucide-react';
 
 export default function ReceiptModal() {
   const t = useTheme();
   const isDesktop = useIsDesktop();
   const closeModal = useModalStore((s) => s.closeModal);
+  const openModal = useModalStore((s) => s.openModal);
+  const showToast = useModalStore((s) => s.showToast);
   const [preview, setPreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [fileData, setFileData] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,12 +23,29 @@ export default function ReceiptModal() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the data URL prefix to get pure base64
+      const base64 = result.split(',')[1];
+      setFileData(base64);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleScan = () => {
+  const handleScan = async () => {
+    if (!fileData) return;
     setScanning(true);
-    // Will connect to edge function in Task 21
-    setTimeout(() => setScanning(false), 2000);
+    try {
+      const result = await scanReceipt(fileData);
+      closeModal();
+      openModal('newTxn', { prefill: result });
+    } catch {
+      showToast('Failed to scan receipt', 'bad');
+    } finally {
+      setScanning(false);
+    }
   };
 
   return (

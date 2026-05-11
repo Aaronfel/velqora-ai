@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useTheme } from '@/hooks/useTheme';
@@ -5,11 +6,35 @@ import { useRealtime } from '@/hooks/useRealtime';
 import Sidebar from './Sidebar';
 import TabBar from './TabBar';
 import ModalRoot from '@/components/modals/ModalRoot';
+import Toast from '@/components/ui/Toast';
+import { useGroupStore } from '@/stores/groupStore';
+import { useTransactionStore } from '@/stores/transactionStore';
+import { useBudgetStore } from '@/stores/budgetStore';
+import { useExchangeStore } from '@/stores/exchangeStore';
 
 export default function AppLayout() {
   const isDesktop = useIsDesktop();
   const t = useTheme();
   useRealtime();
+
+  const activeGroup = useGroupStore((s) => s.activeGroup);
+  const fetchTransactions = useTransactionStore((s) => s.fetchTransactions);
+  const fetchBudgets = useBudgetStore((s) => s.fetchBudgets);
+  const fetchGoals = useBudgetStore((s) => s.fetchGoals);
+  const fetchLatestRate = useExchangeStore((s) => s.fetchLatestRate);
+
+  useEffect(() => {
+    useGroupStore.getState().fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    if (!activeGroup) return;
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    fetchTransactions(activeGroup.id);
+    fetchBudgets(activeGroup.id, currentMonth);
+    fetchGoals(activeGroup.id);
+    fetchLatestRate();
+  }, [activeGroup, fetchTransactions, fetchBudgets, fetchGoals, fetchLatestRate]);
 
   return (
     <div className="h-full flex" style={{ background: t.bg }}>
@@ -26,6 +51,7 @@ export default function AppLayout() {
         </div>
         {!isDesktop && <TabBar />}
         <ModalRoot />
+        <Toast />
       </main>
     </div>
   );
