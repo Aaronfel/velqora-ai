@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import LoginPage from '@/pages/auth/LoginPage';
+import AppLayout from '@/components/layout/AppLayout';
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
@@ -31,7 +32,13 @@ export default function App() {
     <BrowserRouter>
       <AuthGate>
         <Routes>
-          <Route path="/" element={<div>Dashboard placeholder</div>} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<div>Dashboard</div>} />
+            <Route path="/transactions" element={<div>Transactions</div>} />
+            <Route path="/budgets" element={<div>Budgets</div>} />
+            <Route path="/insights" element={<div>Insights</div>} />
+            <Route path="/settings" element={<div>Settings</div>} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthGate>
