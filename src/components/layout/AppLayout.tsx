@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useTheme } from '@/hooks/useTheme';
+import { useRealtime } from '@/hooks/useRealtime';
 import Sidebar from './Sidebar';
 import TabBar from './TabBar';
 import ModalRoot from '@/components/modals/ModalRoot';
@@ -8,6 +9,7 @@ import ModalRoot from '@/components/modals/ModalRoot';
 export default function AppLayout() {
   const isDesktop = useIsDesktop();
   const t = useTheme();
+  useRealtime();
 
   return (
     <div className="h-full flex" style={{ background: t.bg }}>
