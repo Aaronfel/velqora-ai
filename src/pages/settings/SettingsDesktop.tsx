@@ -2,6 +2,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useModalStore } from '@/stores/modalStore';
+import { useGroupStore } from '@/stores/groupStore';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import Toggle from '@/components/ui/Toggle';
@@ -33,9 +34,15 @@ export default function SettingsDesktop() {
     budgetAlerts, setBudgetAlerts,
   } = useSettingsStore();
 
+  const activeGroup = useGroupStore((s) => s.activeGroup);
+  const members = useGroupStore((s) => s.members);
+
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
+
+  const userRole = members.find((m) => m.user_id === user?.id);
+  const roleBadge = userRole?.role === 'owner' ? 'Owner' : userRole?.role === 'member' ? 'Miembro' : 'Viewer';
 
   return (
     <div className="flex flex-col h-full overflow-y-auto" style={{ background: t.bg, padding: '32px 40px' }}>
@@ -75,7 +82,7 @@ export default function SettingsDesktop() {
                   textTransform: 'uppercase',
                 }}
               >
-                Owner
+                {roleBadge}
               </span>
             </div>
           </Card>
@@ -90,22 +97,27 @@ export default function SettingsDesktop() {
                 <Users size={16} color={t.text2} strokeWidth={1.6} />
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>Casa Pérez</div>
-                <div style={{ fontSize: 11.5, color: t.text3 }}>3 miembros</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>{activeGroup?.name ?? 'Sin grupo'}</div>
+                <div style={{ fontSize: 11.5, color: t.text3 }}>{`${members.length} ${members.length === 1 ? 'miembro' : 'miembros'}`}</div>
               </div>
             </div>
 
-            {/* Members list placeholder */}
+            {/* Members list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-              {['Aaron', 'María', 'Lucas'].map((name, i) => (
-                <div key={name} className="flex items-center gap-2">
-                  <Avatar initials={name.slice(0, 2).toUpperCase()} size={28} />
-                  <div>
-                    <div style={{ fontSize: 12.5, color: t.text, fontWeight: 500 }}>{name}</div>
-                    <div style={{ fontSize: 11, color: t.text3 }}>{i === 0 ? 'Owner' : 'Miembro'}</div>
+              {members.map((m) => {
+                const name = m.user?.name ?? 'Sin nombre';
+                const mi = name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+                const roleLabel = m.role === 'owner' ? 'Owner' : m.role === 'member' ? 'Miembro' : 'Viewer';
+                return (
+                  <div key={m.user_id} className="flex items-center gap-2">
+                    <Avatar initials={mi} size={28} />
+                    <div>
+                      <div style={{ fontSize: 12.5, color: t.text, fontWeight: 500 }}>{name}</div>
+                      <div style={{ fontSize: 11, color: t.text3 }}>{roleLabel}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

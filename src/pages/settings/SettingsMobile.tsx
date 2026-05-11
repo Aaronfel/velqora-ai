@@ -2,6 +2,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useModalStore } from '@/stores/modalStore';
+import { useGroupStore } from '@/stores/groupStore';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import Toggle from '@/components/ui/Toggle';
@@ -105,9 +106,15 @@ export default function SettingsMobile() {
     budgetAlerts, setBudgetAlerts,
   } = useSettingsStore();
 
+  const activeGroup = useGroupStore((s) => s.activeGroup);
+  const members = useGroupStore((s) => s.members);
+
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
+
+  const userRole = members.find((m) => m.user_id === user?.id);
+  const roleBadge = userRole?.role === 'owner' ? 'Owner' : userRole?.role === 'member' ? 'Miembro' : 'Viewer';
 
   return (
     <div className="flex flex-col h-full" style={{ background: t.bg }}>
@@ -142,7 +149,7 @@ export default function SettingsMobile() {
                   textTransform: 'uppercase',
                 }}
               >
-                Owner
+                {roleBadge}
               </span>
             </div>
           </Card>
@@ -158,8 +165,8 @@ export default function SettingsMobile() {
                   <Users size={15} color={t.text2} strokeWidth={1.6} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 500, color: t.text }}>Casa Pérez</div>
-                  <div style={{ fontSize: 11, color: t.text3, marginTop: 1 }}>3 miembros</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 500, color: t.text }}>{activeGroup?.name ?? 'Sin grupo'}</div>
+                  <div style={{ fontSize: 11, color: t.text3, marginTop: 1 }}>{`${members.length} ${members.length === 1 ? 'miembro' : 'miembros'}`}</div>
                 </div>
               </div>
             </div>
