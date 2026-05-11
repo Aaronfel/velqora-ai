@@ -3,6 +3,7 @@ import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useTheme } from '@/hooks/useTheme';
 import Sidebar from './Sidebar';
 import TabBar from './TabBar';
+import ModalRoot from '@/components/modals/ModalRoot';
 
 export default function AppLayout() {
   const isDesktop = useIsDesktop();
@@ -22,6 +23,7 @@ export default function AppLayout() {
           )}
         </div>
         {!isDesktop && <TabBar />}
+        <ModalRoot />
       </main>
     </div>
   );

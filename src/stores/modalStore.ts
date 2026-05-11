@@ -28,7 +28,8 @@ interface ModalState {
   showToast: (msg: string, tone?: ToastItem['tone']) => void;
   clearToast: () => void;
   modal: ModalType;
-  openModal: (type: Exclude<ModalType, null>) => void;
+  payload: Record<string, unknown> | null;
+  openModal: (type: Exclude<ModalType, null>, payload?: Record<string, unknown> | null) => void;
   closeModal: () => void;
 }
 
@@ -39,6 +40,7 @@ export const useModalStore = create<ModalState>((set) => ({
   showToast: (msg, tone = 'neutral') => set({ toast: { id: ++toastId, msg, tone } }),
   clearToast: () => set({ toast: null }),
   modal: null,
-  openModal: (type) => set({ modal: type }),
-  closeModal: () => set({ modal: null }),
+  payload: null,
+  openModal: (type, payload?) => set({ modal: type, payload: payload ?? null }),
+  closeModal: () => set({ modal: null, payload: null }),
 }));
