@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "transactions": "Movimientos",
+    "budgets": "Presupuestos",
+    "insights": "Insights",
+    "settings": "Ajustes"
+  },
+  "dashboard": {
+    "greeting": "Hola,",
+    "totalBalance": "Balance total",
+    "healthScore": "Salud financiera",
+    "recentTransactions": "Movimientos recientes",
+    "viewAll": "Ver todos",
+    "aiTip": "Insight"
+  },
+  "transactions": {
+    "title": "Movimientos",
+    "searchPlaceholder": "Probá \"uber el mes pasado\"...",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "net": "Neto",
+    "filters": "Filtros",
+    "all": "Todos",
+    "shared": "Compartido",
+    "private": "Privado"
+  },
+  "budgets": {
+    "title": "Presupuestos",
+    "goals": "Metas",
+    "remaining": "Restantes",
+    "exceeded": "Excedido",
+    "available": "disponible",
+    "addCategory": "Agregar categoría",
+    "contribute": "Aportar",
+    "missing": "Faltan"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "profile": "Perfil",
+    "family": "Familia",
+    "language": "Idioma",
+    "currency": "Moneda principal",
+    "theme": "Tema",
+    "dark": "Oscuro",
+    "light": "Claro",
+    "notifications": "Notificaciones",
+    "push": "Push",
+    "emailDigest": "Resumen por email",
+    "budgetAlerts": "Alertas de presupuesto",
+    "signOut": "Cerrar sesión",
+    "inviteMember": "Invitar miembro",
+    "manageRoles": "Gestionar roles"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "close": "Cerrar"
+  }
+}

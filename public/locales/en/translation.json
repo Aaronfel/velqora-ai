@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "home": "Home",
+    "transactions": "Transactions",
+    "budgets": "Budgets",
+    "insights": "Insights",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "greeting": "Hello,",
+    "totalBalance": "Total balance",
+    "healthScore": "Financial health",
+    "recentTransactions": "Recent transactions",
+    "viewAll": "View all",
+    "aiTip": "Insight"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "searchPlaceholder": "Try \"uber last month\"...",
+    "income": "Income",
+    "expenses": "Expenses",
+    "net": "Net",
+    "filters": "Filters",
+    "all": "All",
+    "shared": "Shared",
+    "private": "Private"
+  },
+  "budgets": {
+    "title": "Budgets",
+    "goals": "Goals",
+    "remaining": "Remaining",
+    "exceeded": "Exceeded",
+    "available": "available",
+    "addCategory": "Add category",
+    "contribute": "Contribute",
+    "missing": "Missing"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "family": "Family",
+    "language": "Language",
+    "currency": "Primary currency",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "notifications": "Notifications",
+    "push": "Push",
+    "emailDigest": "Email digest",
+    "budgetAlerts": "Budget alerts",
+    "signOut": "Sign out",
+    "inviteMember": "Invite member",
+    "manageRoles": "Manage roles"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close"
+  }
+}
