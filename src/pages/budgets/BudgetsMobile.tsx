@@ -1,40 +1,31 @@
-import { useState } from 'react';
-import { Plus, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, ChevronLeft, ChevronRight, MoreHorizontal, Target, PiggyBank } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useModalStore } from '@/stores/modalStore';
+import { useBudgetStore } from '@/stores/budgetStore';
+import { useTransactionStore } from '@/stores/transactionStore';
+import { useGroupStore } from '@/stores/groupStore';
 import Card from '@/components/ui/Card';
 import CatIcon from '@/components/ui/CatIcon';
 import ProgressBar from '@/components/ui/ProgressBar';
+import EmptyState from '@/components/ui/EmptyState';
 import { formatARS } from '@/lib/constants';
-
-// ─── Mock Data ─────────────────────────────────────────────────────────────
-const MOCK_BUDGETS = [
-  { id: '1', category: { name: 'Mercado', icon: 'ShoppingCart', color: '#9FCEA0' }, spent: 124800, total: 150000 },
-  { id: '2', category: { name: 'Comer afuera', icon: 'Utensils', color: '#E8A37C' }, spent: 86300, total: 70000 },
-  { id: '3', category: { name: 'Transporte', icon: 'Car', color: '#7FA5C4' }, spent: 24100, total: 40000 },
-  { id: '4', category: { name: 'Combustible', icon: 'Fuel', color: '#C9B27E' }, spent: 42300, total: 50000 },
-  { id: '5', category: { name: 'Ocio', icon: 'Film', color: '#E89FC4' }, spent: 18900, total: 30000 },
-  { id: '6', category: { name: 'Suscripciones', icon: 'Tv', color: '#B89FCE' }, spent: 12490, total: 15000 },
-];
-
-const MOCK_GOALS = [
-  { id: '1', name: 'Vacaciones Europa', icon: 'Plane', color: '#7FC4B4', current: 850000, target: 2000000, deadline: 'Jun 2026' },
-  { id: '2', name: 'Fondo emergencia', icon: 'Shield', color: '#9FCEA0', current: 1200000, target: 3000000, deadline: 'Dic 2026' },
-  { id: '3', name: 'MacBook Pro', icon: 'Laptop', color: '#B89FCE', current: 350000, target: 800000, deadline: 'Mar 2026' },
-];
+import { budgetSpentMap } from '@/lib/aggregations';
+import type { Budget, SavingsGoal } from '@/types';
 
 const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 // ─── BudgetCard ─────────────────────────────────────────────────────────────
 interface BudgetCardProps {
-  budget: typeof MOCK_BUDGETS[0];
+  budget: Budget;
+  spent: number;
   onPress: () => void;
 }
 
-function BudgetCard({ budget, onPress }: BudgetCardProps) {
+function BudgetCard({ budget, spent, onPress }: BudgetCardProps) {
   const t = useTheme();
-  const pct = Math.round((budget.spent / budget.total) * 100);
-  const over = budget.spent > budget.total;
+  const pct = Math.round((spent / budget.amount) * 100);
+  const over = spent > budget.amount;
 
   return (
     <button
@@ -43,7 +34,7 @@ function BudgetCard({ budget, onPress }: BudgetCardProps) {
     >
       <Card pad={14} style={{ marginBottom: 10 }}>
         <div className="flex items-center gap-3">
-          <CatIcon icon={budget.category.icon} color={budget.category.color} size={40} />
+          <CatIcon icon={budget.category?.icon ?? 'Circle'} color={budget.category?.color ?? '#999'} size={40} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-0.5">
               <span
@@ -54,7 +45,7 @@ function BudgetCard({ budget, onPress }: BudgetCardProps) {
                   color: t.text,
                 }}
               >
-                {budget.category.name}
+                {budget.category?.name ?? 'Sin categoría'}
               </span>
               <MoreHorizontal size={16} color={t.text3} />
             </div>
@@ -75,11 +66,11 @@ function BudgetCard({ budget, onPress }: BudgetCardProps) {
                   color: t.text2,
                 }}
               >
-                {formatARS(budget.spent, false)}
-                <span style={{ color: t.text3 }}>/{formatARS(budget.total, false)}</span>
+                {formatARS(spent, false)}
+                <span style={{ color: t.text3 }}>/{formatARS(budget.amount, false)}</span>
               </span>
             </div>
-            <ProgressBar value={budget.spent} max={budget.total} color={budget.category.color} height={5} />
+            <ProgressBar value={spent} max={budget.amount} color={budget.category?.color ?? '#999'} height={5} />
           </div>
         </div>
       </Card>
@@ -89,15 +80,15 @@ function BudgetCard({ budget, onPress }: BudgetCardProps) {
 
 // ─── GoalCard ───────────────────────────────────────────────────────────────
 interface GoalCardProps {
-  goal: typeof MOCK_GOALS[0];
+  goal: SavingsGoal;
   onContribute: () => void;
   onEdit: () => void;
 }
 
 function GoalCard({ goal, onContribute, onEdit }: GoalCardProps) {
   const t = useTheme();
-  const pct = Math.round((goal.current / goal.target) * 100);
-  const remaining = goal.target - goal.current;
+  const pct = Math.round((goal.current_amount / goal.target_amount) * 100);
+  const remaining = goal.target_amount - goal.current_amount;
 
   return (
     <Card pad={14} style={{ marginBottom: 10 }}>
@@ -163,7 +154,7 @@ function GoalCard({ goal, onContribute, onEdit }: GoalCardProps) {
                 color: t.text,
               }}
             >
-              {formatARS(goal.current, false)}
+              {formatARS(goal.current_amount, false)}
             </span>
             <span
               style={{
@@ -172,7 +163,7 @@ function GoalCard({ goal, onContribute, onEdit }: GoalCardProps) {
                 color: t.text3,
               }}
             >
-              / {formatARS(goal.target, false)}
+              / {formatARS(goal.target_amount, false)}
             </span>
             <span
               style={{
@@ -186,7 +177,7 @@ function GoalCard({ goal, onContribute, onEdit }: GoalCardProps) {
             </span>
           </div>
 
-          <ProgressBar value={goal.current} max={goal.target} color={goal.color} height={5} />
+          <ProgressBar value={goal.current_amount} max={goal.target_amount} color={goal.color} height={5} />
 
           {/* Footer */}
           <div className="flex items-center justify-between mt-2.5">
@@ -225,10 +216,30 @@ export default function BudgetsMobile() {
   const t = useTheme();
   const openModal = useModalStore((s) => s.openModal);
   const [activeTab, setActiveTab] = useState<'budgets' | 'goals'>('budgets');
-  const [monthIdx, setMonthIdx] = useState(0); // 0 = Enero 2026
+  const [monthIdx, setMonthIdx] = useState(0); // 0 = current month
 
-  const totalSpent = MOCK_BUDGETS.reduce((s, b) => s + b.spent, 0);
-  const totalBudget = MOCK_BUDGETS.reduce((s, b) => s + b.total, 0);
+  const activeGroup = useGroupStore((s) => s.activeGroup);
+  const { budgets, goals, fetchBudgets, fetchGoals } = useBudgetStore();
+  const { transactions, fetchTransactions } = useTransactionStore();
+
+  const now = new Date();
+  const selectedMonth = new Date(now.getFullYear(), now.getMonth() - monthIdx, 1);
+  const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`;
+  const monthLabel = MONTHS[selectedMonth.getMonth()];
+  const monthYear = selectedMonth.getFullYear();
+
+  useEffect(() => {
+    if (activeGroup) {
+      fetchBudgets(activeGroup.id, monthKey);
+      fetchGoals(activeGroup.id);
+      fetchTransactions(activeGroup.id);
+    }
+  }, [activeGroup, fetchBudgets, fetchGoals, fetchTransactions, monthKey]);
+
+  const spentMap = budgetSpentMap(transactions, monthKey);
+
+  const totalSpent = budgets.reduce((s, b) => s + (spentMap.get(b.category_id) ?? 0), 0);
+  const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
 
   return (
     <div
@@ -293,7 +304,7 @@ export default function BudgetsMobile() {
       {/* ── Month picker ── */}
       <div className="flex items-center justify-between px-4 mb-5">
         <button
-          onClick={() => setMonthIdx((i) => Math.max(0, i - 1))}
+          onClick={() => setMonthIdx((i) => i + 1)}
           className="flex items-center justify-center rounded-full"
           style={{
             width: 32,
@@ -315,7 +326,7 @@ export default function BudgetsMobile() {
               letterSpacing: '-0.01em',
             }}
           >
-            {MONTHS[monthIdx % 12]} 2026
+            {monthLabel} {monthYear}
           </div>
           <div
             style={{
@@ -330,7 +341,7 @@ export default function BudgetsMobile() {
         </div>
 
         <button
-          onClick={() => setMonthIdx((i) => Math.min(11, i + 1))}
+          onClick={() => setMonthIdx((i) => Math.max(0, i - 1))}
           className="flex items-center justify-center rounded-full"
           style={{
             width: 32,
@@ -347,55 +358,66 @@ export default function BudgetsMobile() {
       <div className="px-4">
         {activeTab === 'budgets' ? (
           <>
-            {MOCK_BUDGETS.map((budget) => (
-              <BudgetCard
-                key={budget.id}
-                budget={budget}
-                onPress={() => openModal('budgetForm')}
-              />
-            ))}
+            {budgets.length === 0 ? (
+              <EmptyState icon={Target} title="Sin presupuestos" subtitle="Creá presupuestos por categoría para controlar tus gastos." action={{ label: 'Crear presupuesto', onClick: () => openModal('budgetForm') }} />
+            ) : (
+              <>
+                {budgets.map((budget) => (
+                  <BudgetCard
+                    key={budget.id}
+                    budget={budget}
+                    spent={spentMap.get(budget.category_id) ?? 0}
+                    onPress={() => openModal('budgetForm')}
+                  />
+                ))}
 
-            {/* Dashed "add category" card */}
-            <button
-              onClick={() => openModal('budgetForm')}
-              className="w-full"
-            >
-              <Card
-                pad={16}
-                style={{
-                  borderStyle: 'dashed',
-                  background: 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  marginBottom: 10,
-                }}
-              >
-                <Plus size={16} color={t.text3} />
-                <span
-                  style={{
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: 13,
-                    color: t.text3,
-                    fontWeight: 500,
-                  }}
+                {/* Dashed "add category" card */}
+                <button
+                  onClick={() => openModal('budgetForm')}
+                  className="w-full"
                 >
-                  Agregar categoría
-                </span>
-              </Card>
-            </button>
+                  <Card
+                    pad={16}
+                    style={{
+                      borderStyle: 'dashed',
+                      background: 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Plus size={16} color={t.text3} />
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 13,
+                        color: t.text3,
+                        fontWeight: 500,
+                      }}
+                    >
+                      Agregar categoría
+                    </span>
+                  </Card>
+                </button>
+              </>
+            )}
           </>
         ) : (
           <>
-            {MOCK_GOALS.map((goal) => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                onContribute={() => openModal('goalForm')}
-                onEdit={() => openModal('goalForm')}
-              />
-            ))}
+            {goals.length === 0 ? (
+              <EmptyState icon={PiggyBank} title="Sin metas de ahorro" subtitle="Creá una meta y seguí tu progreso." action={{ label: 'Crear meta', onClick: () => openModal('goalForm') }} />
+            ) : (
+              goals.map((goal) => (
+                <GoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onContribute={() => openModal('goalForm')}
+                  onEdit={() => openModal('goalForm')}
+                />
+              ))
+            )}
           </>
         )}
       </div>
