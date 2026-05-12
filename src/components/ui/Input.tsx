@@ -16,7 +16,7 @@ export default function Input({ value, onChange, placeholder, type = 'text', pre
       {prefix && <span className="shrink-0 mr-1.5" style={{ fontSize: 13, color: t.text3 }}>{prefix}</span>}
       <input value={value} onChange={onChange} placeholder={placeholder} type={type}
         className="flex-1 min-w-0 outline-none bg-transparent"
-        style={{ fontSize: 14, color: t.text, padding: '10px 0' }} />
+        style={{ fontSize: 16, color: t.text, padding: '10px 0' }} />
       {suffix && <span className="shrink-0 ml-1.5" style={{ fontSize: 12, color: t.text3 }}>{suffix}</span>}
     </div>
   );

@@ -9,11 +9,25 @@
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
   }
   body {
     margin: 0;
     overflow: hidden;
     font-family: var(--font-sans);
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y;
+  }
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+    touch-action: manipulation;
   }
   #root {
     height: 100dvh;
