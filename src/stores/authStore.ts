@@ -9,9 +9,35 @@ interface AuthState {
   loading: boolean;
   initialize: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<{ confirmEmail: boolean }>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+}
+
+const ERROR_MAP: Record<string, string> = {
+  'Invalid login credentials': 'Email o contraseña incorrectos',
+  'Email not confirmed': 'Revisá tu email y confirmá tu cuenta antes de iniciar sesión',
+  'User already registered': 'Ya existe una cuenta con ese email',
+  'Password should be at least 6 characters': 'La contraseña debe tener al menos 6 caracteres',
+  'Signup requires a valid password': 'Ingresá una contraseña válida',
+  'Unable to validate email address: invalid format': 'Formato de email inválido',
+};
+
+function translateError(msg: string): string {
+  return ERROR_MAP[msg] ?? msg;
+}
+
+async function fetchUserProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  if (error) {
+    console.error('Failed to fetch user profile:', error.message);
+    return null;
+  }
+  return data;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -20,13 +46,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
 
   initialize: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Failed to get session:', sessionError.message);
+      set({ loading: false });
+      return;
+    }
+
     if (session) {
-      const { data: user } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+      const user = await fetchUserProfile(session.user.id);
       set({ session, user, loading: false });
     } else {
       set({ loading: false });
@@ -34,11 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        const { data: user } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        const user = await fetchUserProfile(session.user.id);
         set({ session, user });
       } else if (event === 'SIGNED_OUT') {
         set({ session: null, user: null });
@@ -48,16 +72,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signInWithEmail: async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) throw new Error(translateError(error.message));
   },
 
   signUpWithEmail: async (email, password, name) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } },
     });
-    if (error) throw error;
+    if (error) throw new Error(translateError(error.message));
+
+    const needsConfirmation = data.user && !data.session;
+    return { confirmEmail: !!needsConfirmation };
   },
 
   signInWithGoogle: async () => {
@@ -65,7 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       provider: 'google',
       options: { redirectTo: window.location.origin },
     });
-    if (error) throw error;
+    if (error) throw new Error(translateError(error.message));
   },
 
   signOut: async () => {

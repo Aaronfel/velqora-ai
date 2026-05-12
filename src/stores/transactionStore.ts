@@ -49,7 +49,12 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       query = query.eq('type', filter.type);
     }
 
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) {
+      console.error('Failed to fetch transactions:', error.message);
+      set({ loading: false });
+      return;
+    }
     set({ transactions: data ?? [], loading: false });
   },
 

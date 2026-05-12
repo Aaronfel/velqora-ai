@@ -42,6 +42,8 @@ export interface Transaction {
   category_id: string;
   amount: number;
   currency: 'ARS' | 'USD';
+  amount_ars: number | null;
+  exchange_rate: number | null;
   type: 'income' | 'expense' | 'transfer';
   description: string;
   date: string;

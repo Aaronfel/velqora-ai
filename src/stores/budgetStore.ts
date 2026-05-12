@@ -21,20 +21,29 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 
   fetchBudgets: async (groupId, month) => {
     set({ loading: true });
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('budgets')
       .select('*, category:categories(*)')
       .eq('group_id', groupId)
       .eq('month', month);
+    if (error) {
+      console.error('Failed to fetch budgets:', error.message);
+      set({ loading: false });
+      return;
+    }
     set({ budgets: data ?? [], loading: false });
   },
 
   fetchGoals: async (groupId) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('savings_goals')
       .select('*')
       .eq('group_id', groupId)
       .order('deadline');
+    if (error) {
+      console.error('Failed to fetch goals:', error.message);
+      return;
+    }
     set({ goals: data ?? [] });
   },
 

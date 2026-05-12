@@ -49,6 +49,9 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    allowedHosts: true,
+  },
   resolve: {
     alias: { '@': '/src' },
   },

@@ -3,15 +3,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useExchangeStore } from '@/stores/exchangeStore';
 import Card from '@/components/ui/Card';
 import Eyebrow from '@/components/ui/Eyebrow';
-import Sparkline from '@/components/charts/Sparkline';
 
-interface ExchangeRateCardProps {
-  compact?: boolean;
-}
-
-const SPARKLINE_MOCK = [1150, 1170, 1160, 1190, 1185, 1200, 1210];
-
-export default function ExchangeRateCard({ compact = false }: ExchangeRateCardProps) {
+export default function ExchangeRateCard() {
   const t = useTheme();
   const { rate, fetchLatestRate } = useExchangeStore();
 
@@ -19,8 +12,25 @@ export default function ExchangeRateCard({ compact = false }: ExchangeRateCardPr
     fetchLatestRate();
   }, [fetchLatestRate]);
 
-  const buy = rate?.buy_rate ?? 1190;
-  const sell = rate?.sell_rate ?? 1215;
+  if (!rate) {
+    return (
+      <Card pad={14} style={{ background: t.surface }}>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ background: t.navy, boxShadow: `0 0 8px ${t.navy}` }}
+          />
+          <Eyebrow style={{ color: t.text2 }}>Dólar Blue</Eyebrow>
+        </div>
+        <div className="mt-2">
+          <span style={{ fontSize: 12, color: t.text3 }}>Sin cotización disponible</span>
+        </div>
+      </Card>
+    );
+  }
+
+  const buy = rate.buy_rate;
+  const sell = rate.sell_rate;
 
   return (
     <Card pad={14} style={{ background: t.surface }}>
@@ -52,10 +62,6 @@ export default function ExchangeRateCard({ compact = false }: ExchangeRateCardPr
             <span style={{ fontSize: 10, color: t.text3 }}>venta ${sell.toLocaleString('es-AR')}</span>
           </div>
         </div>
-
-        {!compact && (
-          <Sparkline data={SPARKLINE_MOCK} width={80} height={32} color={t.navy} />
-        )}
       </div>
     </Card>
   );

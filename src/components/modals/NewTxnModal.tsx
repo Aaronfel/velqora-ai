@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
 import { CURRENCIES } from '@/lib/constants';
+import { fetchBlueRate, usdToArs } from '@/lib/exchangeRate';
 import { Plus, Check } from 'lucide-react';
 
 export default function NewTxnModal() {
@@ -63,12 +64,27 @@ export default function NewTxnModal() {
     if (isNaN(amountCents) || amountCents <= 0) { showToast('Enter a valid amount', 'bad'); return; }
 
     try {
+      let amountArs: number | null = null;
+      let exchangeRate: number | null = null;
+
+      if (currency === 'USD') {
+        try {
+          exchangeRate = await fetchBlueRate();
+          amountArs = usdToArs(amountCents, exchangeRate);
+        } catch {
+          showToast('No se pudo obtener la cotización del dólar', 'bad');
+          return;
+        }
+      }
+
       await addTransaction({
         group_id: activeGroup.id,
         user_id: currentUser.id,
         category_id: categoryId,
         amount: amountCents,
         currency,
+        amount_ars: amountArs,
+        exchange_rate: exchangeRate,
         type,
         description: description.trim(),
         date,

@@ -22,10 +22,15 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   loading: true,
 
   fetchGroups: async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('groups')
       .select('*')
       .order('created_at');
+    if (error) {
+      console.error('Failed to fetch groups:', error.message);
+      set({ loading: false });
+      return;
+    }
     const groups = data ?? [];
     const active = groups[0] ?? null;
     set({ groups, activeGroup: active, loading: false });
@@ -85,10 +90,14 @@ export const useGroupStore = create<GroupState>((set, get) => ({
   fetchMembers: async () => {
     const { activeGroup } = get();
     if (!activeGroup) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('group_members')
       .select('*, user:users(*)')
       .eq('group_id', activeGroup.id);
+    if (error) {
+      console.error('Failed to fetch members:', error.message);
+      return;
+    }
     set({ members: data ?? [] });
   },
 }));

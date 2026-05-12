@@ -1,9 +1,13 @@
 import type { Transaction } from '@/types';
 
+export function amountInArs(txn: Transaction): number {
+  return txn.currency === 'USD' && txn.amount_ars != null ? txn.amount_ars : txn.amount;
+}
+
 export function sumByType(txns: Transaction[], type: 'income' | 'expense'): number {
   return txns
     .filter((t) => t.type === type)
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + amountInArs(t), 0);
 }
 
 export function groupByDate(txns: Transaction[]): Map<string, Transaction[]> {
@@ -22,7 +26,7 @@ export function groupByCategory(txns: Transaction[]): { label: string; value: nu
     if (txn.type !== 'expense' || !txn.category) continue;
     const key = txn.category.name;
     const existing = map.get(key) ?? { value: 0, color: txn.category.color };
-    existing.value += txn.amount;
+    existing.value += amountInArs(txn);
     map.set(key, existing);
   }
   return Array.from(map.entries())
@@ -46,8 +50,8 @@ export function monthlyTotals(
     labels.push(monthNames[d.getMonth()]);
 
     const monthTxns = txns.filter((t) => t.date.startsWith(key));
-    income.push(monthTxns.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0));
-    expense.push(monthTxns.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0));
+    income.push(monthTxns.filter((t) => t.type === 'income').reduce((s, t) => s + amountInArs(t), 0));
+    expense.push(monthTxns.filter((t) => t.type === 'expense').reduce((s, t) => s + amountInArs(t), 0));
   }
   return { labels, income, expense };
 }
@@ -57,7 +61,7 @@ export function budgetSpentMap(txns: Transaction[], month: string): Map<string, 
   for (const txn of txns) {
     if (txn.type !== 'expense' || !txn.date.startsWith(month)) continue;
     const current = map.get(txn.category_id) ?? 0;
-    map.set(txn.category_id, current + txn.amount);
+    map.set(txn.category_id, current + amountInArs(txn));
   }
   return map;
 }
