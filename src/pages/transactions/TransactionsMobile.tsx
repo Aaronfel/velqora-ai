@@ -1,121 +1,51 @@
-import { useState } from 'react';
-import { Filter, Search, Sparkles, Camera, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Filter, Search, Sparkles, Camera, Plus, Inbox } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useModalStore } from '@/stores/modalStore';
+import { useTransactionStore } from '@/stores/transactionStore';
+import { useGroupStore } from '@/stores/groupStore';
 import Card from '@/components/ui/Card';
 import Chip from '@/components/ui/Chip';
 import TxRow from '@/components/shared/TxRow';
+import EmptyState from '@/components/ui/EmptyState';
 import { formatARS } from '@/lib/constants';
-import type { TxRowData } from '@/components/shared/TxRow';
-
-// ─── Mock Data ─────────────────────────────────────────────────────────────
-const MOCK_TRANSACTIONS: (TxRowData & { dateGroup: string })[] = [
-  {
-    id: '1', group_id: 'g1', user_id: 'u1', category_id: 'c1',
-    amount: 1250000, currency: 'ARS', type: 'expense',
-    description: 'Carrefour', date: '2026-05-11',
-    receipt_url: null, is_shared: true, ai_extracted: false, created_at: '',
-    dateGroup: 'Hoy',
-    category: { id: 'c1', group_id: 'g1', name: 'Mercado', icon: 'ShoppingCart', color: '#9FCEA0', type: 'expense', is_shared: true, sort_order: 0 },
-  },
-  {
-    id: '2', group_id: 'g1', user_id: 'u1', category_id: 'c2',
-    amount: 85000, currency: 'ARS', type: 'expense',
-    description: 'Uber', date: '2026-05-11',
-    receipt_url: null, is_shared: true, ai_extracted: true, created_at: '',
-    dateGroup: 'Hoy',
-    category: { id: 'c2', group_id: 'g1', name: 'Transporte', icon: 'Car', color: '#7FA5C4', type: 'expense', is_shared: true, sort_order: 2 },
-  },
-  {
-    id: '3', group_id: 'g1', user_id: 'u1', category_id: 'c3',
-    amount: 48000, currency: 'ARS', type: 'expense',
-    description: 'La Cabrera', date: '2026-05-10',
-    receipt_url: null, is_shared: false, ai_extracted: true, created_at: '',
-    dateGroup: 'Ayer',
-    category: { id: 'c3', group_id: 'g1', name: 'Comer afuera', icon: 'Utensils', color: '#E8A37C', type: 'expense', is_shared: true, sort_order: 1 },
-  },
-  {
-    id: '4', group_id: 'g1', user_id: 'u1', category_id: 'c4',
-    amount: 15000000, currency: 'ARS', type: 'income',
-    description: 'Sueldo mayo', date: '2026-05-10',
-    receipt_url: null, is_shared: true, ai_extracted: false, created_at: '',
-    dateGroup: 'Ayer',
-    category: { id: 'c4', group_id: 'g1', name: 'Ingresos', icon: 'Briefcase', color: '#9FCEA0', type: 'income', is_shared: true, sort_order: 10 },
-  },
-  {
-    id: '5', group_id: 'g1', user_id: 'u1', category_id: 'c5',
-    amount: 320000, currency: 'ARS', type: 'expense',
-    description: 'Netflix + Spotify', date: '2026-05-09',
-    receipt_url: null, is_shared: true, ai_extracted: false, created_at: '',
-    dateGroup: 'Vie 9 may',
-    category: { id: 'c5', group_id: 'g1', name: 'Suscripciones', icon: 'Tv', color: '#B89FCE', type: 'expense', is_shared: true, sort_order: 4 },
-  },
-  {
-    id: '6', group_id: 'g1', user_id: 'u1', category_id: 'c6',
-    amount: 950000, currency: 'ARS', type: 'expense',
-    description: 'YPF combustible', date: '2026-05-09',
-    receipt_url: null, is_shared: false, ai_extracted: false, created_at: '',
-    dateGroup: 'Vie 9 may',
-    category: { id: 'c6', group_id: 'g1', name: 'Combustible', icon: 'Fuel', color: '#C9B27E', type: 'expense', is_shared: true, sort_order: 3 },
-  },
-  {
-    id: '7', group_id: 'g1', user_id: 'u1', category_id: 'c7',
-    amount: 280000, currency: 'ARS', type: 'expense',
-    description: 'Farmacity', date: '2026-05-08',
-    receipt_url: null, is_shared: true, ai_extracted: true, created_at: '',
-    dateGroup: 'Jue 8 may',
-    category: { id: 'c7', group_id: 'g1', name: 'Salud', icon: 'Heart', color: '#D97A6C', type: 'expense', is_shared: true, sort_order: 12 },
-  },
-  {
-    id: '8', group_id: 'g1', user_id: 'u1', category_id: 'c8',
-    amount: 3500000, currency: 'ARS', type: 'expense',
-    description: 'Alquiler mayo', date: '2026-05-08',
-    receipt_url: null, is_shared: true, ai_extracted: false, created_at: '',
-    dateGroup: 'Jue 8 may',
-    category: { id: 'c8', group_id: 'g1', name: 'Alquiler', icon: 'Home', color: '#E8D5A8', type: 'expense', is_shared: true, sort_order: 6 },
-  },
-  {
-    id: '9', group_id: 'g1', user_id: 'u1', category_id: 'c9',
-    amount: 450000, currency: 'ARS', type: 'expense',
-    description: 'Edesur', date: '2026-05-07',
-    receipt_url: null, is_shared: true, ai_extracted: false, created_at: '',
-    dateGroup: 'Mié 7 may',
-    category: { id: 'c9', group_id: 'g1', name: 'Servicios', icon: 'Zap', color: '#E8C75A', type: 'expense', is_shared: true, sort_order: 7 },
-  },
-];
-
-// ─── Summary ─────────────────────────────────────────────────────────────────
-const income = MOCK_TRANSACTIONS
-  .filter((t) => t.type === 'income')
-  .reduce((s, t) => s + t.amount, 0);
-const expenses = MOCK_TRANSACTIONS
-  .filter((t) => t.type === 'expense')
-  .reduce((s, t) => s + t.amount, 0);
-const net = income - expenses;
-
-// ─── Group by date ─────────────────────────────────────────────────────────
-function groupByDate(txns: typeof MOCK_TRANSACTIONS) {
-  const map = new Map<string, typeof MOCK_TRANSACTIONS>();
-  for (const txn of txns) {
-    const list = map.get(txn.dateGroup) ?? [];
-    list.push(txn);
-    map.set(txn.dateGroup, list);
-  }
-  return map;
-}
+import { groupByDate, sumByType } from '@/lib/aggregations';
 
 // ─── Filter chip labels ─────────────────────────────────────────────────────
 const RANGE_CHIPS = ['Mayo 2026', 'Última semana', 'Este mes', 'Personalizado'];
 const VIS_CHIPS = ['Todos', 'Compartidos', 'Privados'];
 
+function formatDateLabel(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (dateStr === today.toISOString().slice(0, 10)) return 'Hoy';
+  if (dateStr === yesterday.toISOString().slice(0, 10)) return 'Ayer';
+
+  return d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 export default function TransactionsMobile() {
   const t = useTheme();
   const openModal = useModalStore((s) => s.openModal);
 
+  const activeGroup = useGroupStore((s) => s.activeGroup);
+  const { transactions, loading, fetchTransactions } = useTransactionStore();
+
+  useEffect(() => {
+    if (activeGroup) fetchTransactions(activeGroup.id);
+  }, [activeGroup, fetchTransactions]);
+
   const [activeRange, setActiveRange] = useState('Mayo 2026');
   const [activeVis, setActiveVis] = useState('Todos');
 
-  const grouped = groupByDate(MOCK_TRANSACTIONS);
+  const income = sumByType(transactions, 'income');
+  const expenses = sumByType(transactions, 'expense');
+  const net = income - expenses;
+
+  const grouped = groupByDate(transactions);
 
   return (
     <div
@@ -238,45 +168,54 @@ export default function TransactionsMobile() {
 
       {/* ── Transaction groups ── */}
       <div className="px-4 space-y-2">
-        {Array.from(grouped.entries()).map(([dateLabel, txns]) => (
-          <div key={dateLabel}>
-            {/* Sticky date header */}
-            <div
-              className="sticky top-0 z-10 flex items-center mb-1 py-1"
-              style={{
-                background: t.bg + 'ee',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              <span
+        {!loading && transactions.length === 0 ? (
+          <EmptyState
+            icon={Inbox}
+            title="Sin movimientos"
+            subtitle="Agregá tu primera transacción para empezar a ver tus finanzas."
+            action={{ label: 'Nuevo movimiento', onClick: () => openModal('newTxn') }}
+          />
+        ) : (
+          Array.from(grouped.entries()).map(([dateStr, txns]) => (
+            <div key={dateStr}>
+              {/* Sticky date header */}
+              <div
+                className="sticky top-0 z-10 flex items-center mb-1 py-1"
                 style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 10.5,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: t.text3,
-                  fontWeight: 600,
+                  background: t.bg + 'ee',
+                  backdropFilter: 'blur(8px)',
                 }}
               >
-                {dateLabel}
-              </span>
-            </div>
-
-            {/* Card wrapping rows */}
-            <Card pad={0} style={{ overflow: 'hidden' }}>
-              <div
-                className="divide-y"
-                style={{ '--tw-divide-opacity': '1', borderColor: t.glassDivider } as React.CSSProperties}
-              >
-                {txns.map((txn) => (
-                  <div key={txn.id} className="px-4">
-                    <TxRow txn={txn} dense />
-                  </div>
-                ))}
+                <span
+                  style={{
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 10.5,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: t.text3,
+                    fontWeight: 600,
+                  }}
+                >
+                  {formatDateLabel(dateStr)}
+                </span>
               </div>
-            </Card>
-          </div>
-        ))}
+
+              {/* Card wrapping rows */}
+              <Card pad={0} style={{ overflow: 'hidden' }}>
+                <div
+                  className="divide-y"
+                  style={{ '--tw-divide-opacity': '1', borderColor: t.glassDivider } as React.CSSProperties}
+                >
+                  {txns.map((txn) => (
+                    <div key={txn.id} className="px-4">
+                      <TxRow txn={txn} dense />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ── FAB cluster ── */}
