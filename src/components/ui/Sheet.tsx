@@ -17,7 +17,7 @@ export default function Sheet({ device, title, subtitle, onClose, children, foot
   const BLUR = 'blur(24px) saturate(180%)';
 
   return (
-    <div className="absolute inset-0 z-30 flex" style={{ alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center' }}>
+    <div className="fixed inset-0 z-[60] flex" style={{ alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center' }}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.32)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} onClick={onClose} />
       <div className="relative flex flex-col"
         style={{
